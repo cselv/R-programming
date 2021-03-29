@@ -53,6 +53,7 @@ for each class
 * Core R is written in C and Fortran for speed
   * Parts of R are written in R
 * It's worth the time to look at the resources available at CRAN
+* R is primarily for data analytics / python is ML and Matlab modeling
 
 ## R Sessions and R Environment
 Main points for this session
@@ -76,3 +77,24 @@ Main points for this session
 
 ---
 
+creating a vector of different types
+experiment with NA
+basic arithmetic operations
+use some byyasic attributes
+
+
+---
+# Day Two:
+* vectors and arrays
+* Projects 
+* Packages
+* programming in R
+* dataframes 
+* lists
+
+1. data - measurements - vectors
+2. information - organize - data frames
+3. knowledge - gain insights
+4.  Wisdom - being able to apply knoweldge
+
+arrays are the primitive 
