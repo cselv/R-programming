@@ -98,3 +98,78 @@ use some byyasic attributes
 4.  Wisdom - being able to apply knoweldge
 
 arrays are the primitive 
+
+-------
+# Day Three;
+### Recap:
+#### vectors or arrays
+* primitive data type is a vector
+* all elements of a vector are of the same type
+* a scalar (3.8) is a vector of length 1
+* we create a vector from atomic values by using c(... which combines elements)
+* R will try and guess at what the type of vector is
+  * numeric(n) creates a numeric vector of type numeric
+* we reference individual elements with [] notation
+  * R allows us to put elements anywhere
+* Functions operate on arrays
+  * eg sum()
+#### Lists
+* Used to hold heterogenous data
+* Usually represents some sort of entity
+* We will look at working with lists later
+
+#### Dataframes
+* Think of it as table in a date base
+* Each column is of the same type
+* We can name the rows and columns
+* We can access columns using df$colname or df[,colnum]]
+
+**We wll return to more detailed work with data later**
+
+---------------
+
+# Functions
+* There are build in functions that operate on arrays
+* They return either another vector or a statistic 
+
+#### Functional Programming
+* A function doesn't change anything but produces something new
+* Can think of a function as a transformation of one piece of data to another
+
+-----
+
+Code used in class
+x <- numeric(5)
+
+bob <- list("name"="bob","male"=TRUE,"age"=45, "child_ages"=c(12, 14, 18))
+str(bob)
+ellen <- list("name"="ellen","male"=FALSE,"age"=22, "child_ages"=NA)
+
+###
+
+name <- c("Jon", "Bill", "Maria")
+age <- c(23, 41, 32)
+df <- data.frame(name, age)
+df2 <- data.frame(name = c("Jon", "Bill", "Maria"),
+                 age = c(23, 41, 32)
+)
+
+colnames(df) <- c("FirstName", "Age")
+rownames(df) <- c("Subject 1", "Subject 2", "Subject 3")
+###
+order(cyl)
+sort(cyl)
+rev(cyl)
+sum(cyl), man, min
+cos(cyl)
+f <- function(x) (cos(x)*cos(x))+(sin(x)*sin(x))
+f(cyl)
+##
+cyl[6]=NA
+sum(x, na.rm=T)
+
+"%a2b%" <- function(a,b) return(a+2*b)
+x <- c(4:6)
+y <- c(1:3)
+x %a2b% y
+
