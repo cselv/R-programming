@@ -173,3 +173,15 @@ x <- c(4:6)
 y <- c(1:3)
 x %a2b% y
 
+====================
+
+# Day Four
+
+We start working putting together the material we have learned so far by walking through a simple project.
+
+1. Understand the R community standard for reproducible research in terms of R markdown
+2. Import data from a csv file
+3. Do a preliminary analysis of the data
+4. Clean and transform the data
+5. Do some statical analysis
+6. 
