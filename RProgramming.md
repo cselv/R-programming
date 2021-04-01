@@ -184,4 +184,17 @@ We start working putting together the material we have learned so far by walking
 3. Do a preliminary analysis of the data
 4. Clean and transform the data
 5. Do some statical analysis
-6. 
+6. And some plotting
+
+### What we are going to do
+Create an R notebook
+ref: https://bookdown.org/yihui/rmarkdown/
+
+* R markdown files are used to publish results
+* R notebooks are used to share code and results
+
+* Read the csv file in as a dataframe using the read.csv() function
+* transform the data so that it is a workable form
+* Do some initial exploration and visualization of the data
+* Run statistical analysis of data to answer questions
+   

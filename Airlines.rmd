@@ -1,0 +1,153 @@
+---
+title: "Airline Analysis"
+output: html_notebook
+---
+## Project Description
+
+Comparative analysis of airline delay data to determine:
+
+1. What factor causes the most number of delays in terms of both flights and time
+2. Amount each factor contributes to overall delays
+3. Worst airports for delays overall and factor by each airport that causes the most delays
+4. Causes and amount of delays by year and by month
+5. Delays for each airport by year
+
+### Data Sources
+
+Data is sourced from:
+
+https://corgis-edu.github.io/corgis/csv/airlines/
+
+### Data Aquisition
+
+Read in data from csv file
+```{r}
+df <- read.csv("airlines.csv", stringsAsFactors = FALSE)
+```
+
+### Perform some preliminary analysis
+
+Run some basic analysis to see the shape of the data
+```{r}
+str(df)
+dim(df)
+ncol(df)
+nrow(df)
+summary(df)
+colnames(df)
+rownames(df)
+length(unique(df[,1]))
+```
+
+### Data Transformation
+
+Each of the questions above looks at a only a subset of the data. A first step is to figure out how to extract the data we are interested in so that we don't process a lot of data we don't need.
+
+For this example, we will look at the overall delays by flights and by minutes. In this case, a number f columns are redundant so we can eliminate the Airport.Names, Time.Label, Time.Month.Name and the list of airlines and number of airlines.
+```{r}
+df1 <- subset(df,select=-c(2,3,5,12,13) )
+colnames(df1)
+
+```
+
+The Column names are awkward, so rename columns with a new length(19) character vector. 
+```{r}
+ newnames <-  c("Code", "Month", "Year" , "Carriers", "LatePlane", "NVS", "Security", "Weather", "Cancelled", "Delayed", "Diverted", "OnTime", "Total", "MinCarrier", "MinLateAir", "MinNVS", "MinSec", "MinTotal", "MinWeather")
+colnames(df1) <- newnames
+```
+
+We also want to reverse the order of the last two columns
+```{r}
+df2 <- cbind(df1[,1:17],df1[,19],df1[,18])
+colnames(df2)
+```
+
+But the last two columns lose their names so we rename
+```{r}
+ newnames <-  c("Code", "Month", "Year" , "Carriers", "LatePlane", "NVS", "Security", "Weather", "Cancelled", "Delayed", "Diverted", "OnTime", "Total", "MinCarrier", "MinLateAir", "MinNVS", "MinSec", "MinWeather", "MinTotal")
+colnames(df2) <- newnames
+```
+
+#### Data Quality
+
+Not sure if the columns were reversed correctly so compare the columns from before and after to make sure they are correct
+```{r}
+ ctotal <- df1$MinTotal == df2$MinTotal
+ length(ctotal[ctotal == FALSE])
+ cweather <- df1$MinWeather == df2$MinWeather
+ length(cweather[cweather == FALSE])
+ 
+```
+
+### Data Transformation.
+
+For our first analysis, suppose we are only interested in totals over years in question. If we collapse the data by airport, how many rows would that produce?
+```{r}
+length(unique(df2$Code))
+```
+
+So we have 29 airports. So now we get rid of the columns that have to do with years and months.
+```{r}
+df3 <- subset(df2, select=-c(2,3))
+```
+
+But we need to aggregate the data by airport. Since we are collapsing over the years, we should have the same number of observations for each airport.
+```{r}
+aggregate.data.frame(df3[,1], list(df3$Code), length)
+df4 <- aggregate.data.frame(df3[,2:17], list(df3$Code), sum)
+
+```
+
+If we want to work with just the number of flights:
+```{r}
+fl <- subset(df4, select=c(1:10))
+```
+
+Or if we want to work with minutes
+```{r}
+mts <- subset(df4, select=c(1,12:17))
+```
+
+At this point, we know the steps that we need to do to extract this data for analysis, so we can combine the steps into a function called "extractFlightDelaysByAirport()" and another function called "extractAirportDelaysByMinutes()"
+```{r}
+## To come
+```
+
+## Data Visualization
+
+We can use some basic plotting functions to start to visualise the data
+For example, Boxplot
+```{r}
+boxplot(mts$MinCarrier,mts$MinTotal)
+```
+
+But these numbers are hard to read so look at percentages instead
+```{r}
+boxplot((mts$MinCarrier/mts$MinTotal)*100,(mts$MinWeather/mts$MinTotal)*100)
+```
+
+This suggests we can transform the raw data into a more workable form of percentages for some analyses
+```{r}
+permts <- data.frame(mts$Group.1,100*(mts[,2:7]/mts$MinTotal))
+
+```
+
+However, the raw data may still be useful for other kinds of analyses like the ordering of the most number of minutes
+
+```{r}
+mts[order(-mts$MinTotal),]
+```
+
+we can also extract data by cities
+
+```{r}
+atl <- subset(df,Airport.Code == "ATL")
+
+```
+
+And we can save our datasets
+```{r}
+save(mts,file="mts.Rda")
+write.csv(mts,"mts.csv")
+```
+
