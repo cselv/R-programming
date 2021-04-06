@@ -1,0 +1,225 @@
+---
+title: "Airline Analysis 2"
+output: html_notebook
+---
+## Project Description
+
+This markdown file introduces functions and the core R graphics
+
+### Data Sources
+
+Data is sourced from:
+
+https://corgis-edu.github.io/corgis/csv/airlines/
+
+### Data Aquisition
+
+Read in data from csv file
+
+We define a function called cleanData() that drops the columns and applies the new headings.
+For this example, we will look at the overall delays by flights and by minutes. In this case, a number of columns are redundant so we can eliminate the Airport.Names, Time.Label, Time.Month.Name and the list of airlines and number of airlines.
+
+Notice that by reusing the "df" variable, we have not used as much storage. Once we have the basic operations worked out and debugged, like we did last week, we can make the whole process more efficient this way.
+
+```{r}
+df <- read.csv("airlines.csv", stringsAsFactors = FALSE)
+
+cleanData <- function(df) {
+    y <- x <- subset(df,select=-c(2,3,5,12,13) )
+    y <- cbind(y[,1:17],y[,19],y[,18])
+    colnames(y) <- c("Code", "Month", "Year" , "Carriers", "LatePlane", "NVS", "Security", "Weather", "Cancelled", "Delayed", "Diverted", "OnTime", "Total", "MinCarrier", "MinLateAir", "MinNVS", "MinSec", "MinWeather", "MinTotal")
+    return(y)
+          
+}
+
+df <- cleanData(df)
+```
+
+
+### Data Extraction
+
+Here we define a couple of functions which create some new datasets
+One of the advantages to using functions is that we have (a) more descriptive code and (b) we don't have to retype a series of commands
+
+1. extractRawFlights(df) takes our cleaned data and returns the data frame with the columns dealing with minutes dropped. 
+2. extractRawMinutes(x)does the same with the minutes
+3. we can convert the raw data to percents with the functions minToPercent() and flightsToPercent()
+
+Using functions once we know how we want to manipulate the data is both more efficient and easier to understand and work with
+
+```{r}
+extractFlights <- function(data) return (subset(data, select=c(1:13)))
+extractMinutes <- function(data) return(subset(data, select=c(1:3,14:19)))
+flightsToPercent <- function(data) return(data.frame(data[,1:3],100*(data[,4:13]/data$Total)))
+minutesToPercent <- function(data) return(data.frame(data[,1:3],100*(data[,4:8]/data$MinTotal)))
+
+```
+
+
+```{r}
+flights <- extractFlights(df)
+minutes <- extractMinutes(df)
+```
+
+
+### Aggregate
+
+We can also aggregate the data by airport using a function
+
+```{r}
+flightsByAirport <- function(data,code ) { 
+    tmp <- aggregate.data.frame(data[,4:13], list(data$Code), sum)
+    return(subset(tmp, tmp[,1] == code))
+}
+minutesByAirport <- function(data, code) {
+    tmp <- aggregate.data.frame(data[,4:9], list(data$Code), sum)
+    return(subset(tmp, tmp[,1] == code))
+}
+
+```
+
+```{r}
+atl_flights <- flightsByAirport(flights,"ATL")
+atl_minutes <- minutesByAirport(minutes,"ATL")
+```
+
+
+### And also create the percentages
+```{r}
+flightsToPercent <- function(data) return(data.frame(data[1,1],100*(data[1,2:11]/data$Total)))
+minutesToPercent <- function(data) return(data.frame(data[1,1],100*(data[1,2:7]/data$MinTotal)))
+
+```
+
+```{r}
+f <- flightsToPercent(atl_flights)
+m <- minutesToPercent(atl_minutes)
+```
+
+# Core R Data Visualization
+
+##  barplot
+
+```{r}
+barplot(as.numeric(f[2:10]))
+```
+
+
+```{r}
+barplot(as.numeric(f[1,2:10]),
+        main="Percent Flight Delay by Causes",
+        xlab = "Delay type",
+        ylab = "Percent"
+        )
+
+
+```
+
+## Histogram
+
+For this we use the air quality data set for New York
+
+```{r}
+aq <- airquality
+
+```
+
+Histogram for temperature
+```{r}
+hist(aq$Temp)
+
+``` 
+
+And we can make it more readable
+
+```{r}
+hist(aq$Temp,
+main="Maximum daily temperature at La Guardia Airport",
+xlab="Temperature in degrees Fahrenheit",
+xlim=c(50,100),
+col="darkmagenta",
+freq=TRUE
+)
+```
+
+## Pie Chart
+
+Using  Pie chart for our atlanta minutes data
+
+```{r}
+pie()
+
+```
+
+Pretty it up
+
+```{r}
+
+pie(as.numeric(m[1,2:6]), labels=colnames(m)[2:6],
+    main = "Minutes of Delay by Cause",
+    col = c("red","green","yellow","blue"))
+```
+### The R Plot Function
+
+Creating Example Data
+
+```{r}
+set.seed(1919)                               
+x1 <- rnorm(1000)
+y1 <- x1 + rnorm(1000)
+
+```
+
+Example 1: Basic Application of plot() Function in R
+
+```{r}
+plot(x1, y1)    
+```
+
+Example 2: Add Regression Line to Scatterplot
+
+```{r}
+plot(x1, y1)                                   
+abline(lm(y1 ~ x1), col = "red") 
+```
+
+Example 3: Draw a Density Plot in R
+
+In combination with the density() function, the plot function can be used to create a probability density plot in R:
+
+```{r}
+plot(density(x1))
+```
+
+Example 4: Plot Multiple Densities in Same Plot
+
+If we replace the plot() function with the lines() function, we can add a second density to our previously created kernel density plot. Have a look at the following R code:
+
+```{r}
+plot(density(x1))                              # Plot multiple densities
+lines(density(y1), col = "red")
+```
+
+Example 5: Modify Main Title & Axis Labels
+
+The plot function provides many arguments for the modification of its parameters. For instance, we can change the main title and the axis labels of our plot as follows:
+
+```{r}
+plot(x1, y1,                                   
+     main = "This is my Plot",
+     xlab = "X-Values",
+     ylab = "Y-Values")
+
+
+```
+
+Example 8: Plot a Function in R
+The plot() function also allows to draw a function in R. Let’s assume that we want to draw the cos function in R. Then we first need to create a sequence of x-values…
+```{r}
+x2 <- seq(- 5, 5, 0.01)
+y2 <- cos(x2) 
+plot(x2, y2) 
+```
+
+
+
