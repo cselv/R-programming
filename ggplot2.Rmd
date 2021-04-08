@@ -1,0 +1,258 @@
+---
+title: "Plotting with ggplo2"
+output: html_notebook
+---
+
+Based on a tutorial by Hefin Rhys
+
+## Installation
+
+If you don't have gg plot installed
+```{r}
+install.packages("ggplot2")
+```
+
+Load the package for use and the data set iris. FYI this is a classic data set that records the length and width of petals and sepal (the thing that conects the stem to tht bloom) of iris plants for three different species which we can see by listing the unique species names
+
+```{r}
+library(ggplot2)
+data(iris)
+head(iris)
+unique(iris$Species)
+
+```
+
+If we use the base R plot function on the dataset, we get plots of every variable against every other variable as scatter plots
+
+```{r}
+plot(iris)
+```
+
+Since we are just exploring the data, we can see some clustering between petal length and sepal width which we can plot.
+
+```{r}
+plot(iris$Petal.Length,iris$Sepal.Width)
+```
+
+#### GGPLOT
+
+GG = "Grammar of graphics"
+Basic idea is that we build up a graphic in layers like 
+
+1. the actual plotting area
+2. the labels and scales on the axes
+3. data represented by geoms or geometrical objects
+4. boxplots
+5. regression lines, etc
+
+ggplopt takes a data frame and a function called aes or aestheics which describes how map the data.
+This code below is our base layer
+
+```{r} 
+ggplot(iris, aes(x=Petal.Length, y=Sepal.Width))
+
+```
+
+Now we add a layer to show the data as point geoms
+
+```{r}
+ggplot(iris, aes(x=Petal.Length, y=Sepal.Width)) +
+  geom_point()
+
+```
+Now we want to see which species each point belongs to so we can add colour by species
+
+```{r}
+ggplot(iris, aes(x=Petal.Length, y=Sepal.Width, colour = Species)) +
+  geom_point()
+
+```
+
+If we want to also show petal width, we can change the size of the data points to represent petal width
+```{r}
+ggplot(iris, aes(x=Petal.Length, y=Sepal.Width, colour = Species, size = Petal.Width)) +
+  geom_point()
+
+```
+We can also map species to a shape
+
+```{r}
+
+ggplot(iris, aes(x=Petal.Length, y=Sepal.Width, shape = Species, size = Petal.Width)) +
+  geom_point()
+
+```
+
+And we can also add back the colour
+
+```{r}
+ggplot(iris, aes(x=Petal.Length, y=Sepal.Width, shape = Species, size = Petal.Width, colour = Species)) +
+  geom_point()
+```
+
+The alpha value is transparency so that the higher the value, the more opaque the symbol is.
+
+```{r}
+
+ggplot(iris, aes(x=Petal.Length, y=Sepal.Width, shape = Species, alpha = Petal.Width, colour = Species)) +
+  geom_point()
+
+```
+
+Some best practices:
+
+Do not represent values with two different visual cues (we used shape and colour for species).
+  - The redundant visual info clutters the ploat
+  - The redundant info suggest other values that don't actually exist
+Do not use colour or shape on continuous values, only categorical values -- the following will not run
+Alpha is not often not a good choice for presentation clarity
+
+
+```{r}
+ggplot(iris, aes(x=Petal.Length, y=Sepal.Width, shape = Petal.Width, colour = Species)) +
+  geom_point()
+
+```
+
+Create a histogram or bar chart, the "count" stat is the default
+
+```{r}
+ggplot(iris, aes(Sepal.Length)) + geom_bar(stat= "count")
+```
+
+We can bin the data to produce a histogram by specifying the number of bins
+```{r}
+ggplot(iris, aes(Sepal.Length)) + geom_bar(stat= "bin", bins=5)
+```
+
+We can do a barchart by species and use the colours options
+```{r}
+
+ggplot(iris, aes(Species, Sepal.Length, fill=Species)) + geom_bar(stat= "identity")
+```
+
+We can also define statistics instead of the sum, and tweak the visual properites locally if we don't want to map them to variables in aes()
+
+```{r}
+
+ggplot(iris, aes(Species, Sepal.Length, fill=Species)) + geom_bar(stat="summary", fun="mean", color="black")
+
+```
+
+We can even add a layer that adds the actual data points to the graph
+
+```{r}
+ggplot(iris, aes(Species, Sepal.Length, fill=Species)) + 
+  geom_bar(stat="summary", fun="mean", color="black") +
+    geom_point()
+
+```
+We can spread these points out along the x axis for clarity
+
+```{r}
+ggplot(iris, aes(Species, Sepal.Length, fill=Species)) + 
+  geom_bar(stat="summary", fun="mean", color="black") +
+    geom_point(position = position_jitter())
+
+```
+
+And a couple of tweaks to make it look nicer
+
+```{r}
+ggplot(iris, aes(Species, Sepal.Length, fill=Species)) + 
+  geom_bar(stat="summary", fun="mean", color="black") +
+    geom_point(position = position_jitter(.3), size=2)
+
+```
+
+We can also layer a theme onto the plot to change the layout elements
+
+```{r}
+ggplot(iris, aes(Species, Sepal.Length, fill=Species)) + 
+  geom_bar(stat="summary", fun="mean", color="black") +
+    geom_point(position = position_jitter(.3), size=2) +
+      theme(panel.grid = element_blank(), panel.background = element_rect(fill="white"),
+            panel.border=element_rect(colour="black",size=.3,fill=NA))
+
+```
+
+```{r}
+pp <- ggplot(iris, aes(Species, Sepal.Length, fill=Species)) + 
+  geom_bar(stat="summary", fun="mean", color="black") +
+    geom_point(position = position_jitter(.3), size=2)
+```
+
+There are built int themes we can use
+```{r}
+
+pp+theme_bw()
+```
+
+```{r}
+pp + theme_classic()
+```
+
+```{r}
+pp + theme_dark()
+
+```
+
+Best Practice: Once you have a theme customized to your tastes, save it so that it can be reused.
+
+### Boxplots
+
+```{r}
+ ggplot(iris, aes(Species, Sepal.Length, fill=Species)) + 
+  geom_boxplot(notch =TRUE)
+  
+
+```
+And we can overlay the points again
+
+```{r}
+ ggplot(iris, aes(Species, Sepal.Length, fill=Species)) + 
+  geom_boxplot(notch =TRUE) + geom_point(position = position_jitter(.3))
+
+```
+
+change layer stacking order and add some labels
+
+```{r}
+ggplot(iris, aes(Species, Sepal.Length, fill=Species)) + 
+  geom_point(position = position_jitter(.3)) +
+  geom_boxplot(notch =TRUE) +
+  labs( x="", y= "Sepal Length (mm)") +
+  ggtitle("Sepal Length by Iris Species")
+
+```
+
+----------------------------
+
+```{r}
+
+data("ToothGrowth")
+t <- ToothGrowth
+head(t)
+```
+```{r}
+ggplot(t,aes(supp,len, fill=as.factor(dose))) +
+  geom_bar(stat="summary", fun="median")
+```
+
+Change from stacked to side by side
+
+```{r}
+ggplot(t,aes(supp,len, fill=as.factor(dose))) +
+  geom_bar(stat="summary", fun="median", position="dodge")
+
+```
+
+# a plotly example
+
+```{r}
+library(plotly)
+d <- diamonds[sample(nrow(diamonds),1000),]
+plot_ly(d, x=~carat, y=~price, color=~carat, size=~carat, text=~paste("Clarity: ", clarity))
+```
+
+

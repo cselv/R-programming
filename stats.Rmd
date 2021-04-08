@@ -1,0 +1,152 @@
+---
+title: "Satistics"
+output: html_notebook
+---
+
+# Descriptive Stats
+```{r}
+data <- rnorm(200,10, 1)
+datana <- data
+datana[1] <- NA
+datana[100] <- NA
+```
+
+```{r}
+max(data)
+max(datana)
+max(datana,na.rm=TRUE)
+```
+Descriptive Stats
+
+max(x, na.rm = FALSE) – It shows the maximum value. By default, NA values are not removed. NA is considered the largest unless na.rm=true is used.
+
+min(x, na.rm = FALSE) – Shows minimum value in a vector. If there are na values, NA is returned unless na.rm=true is used.
+
+length(x) – Gives length of the vector and includes na values. Na.rm=instruction does not work with this command.
+
+sum(x, na.rm = FALSE) – Shows the sum of the vector elements.
+    
+mean(x, na.rm = FALSE) – We obtain an arithmetic mean with this.
+    
+median( x, na.rm = FALSE) – Shows the median value of the vector.
+    
+sd(x, na.rm = FALSE) – Shows the standard deviation.
+    
+var(x, na.rm = FALSE) – Shows the variance.
+    
+mad(x, na.rm = FALSE) – Shows the median absolute deviation.
+
+quantile(data, percentile) 
+```{r}
+quantile(data, .5)
+median(data)
+quantile(data,.05)
+```
+Cummulative statistics shows partial results moving from start to finism
+```{r}
+vec = c(3,5,7,5,3,2,6)
+cumsum(vec)
+```
+```{r}
+cumprod(vec)
+```
+
+
+```{r}
+cummax(vec)
+```
+
+Example, creating a running average
+
+```{r}
+index <- seq(along=vec)
+cumsum(vec)/index
+```
+ We can do row and column operations dataframes
+ 
+```{r}
+data(iris)
+d <- iris[,2:4]
+rowSums(d)
+colSums(d)
+rowMeans(d)
+colMeans(d)
+```
+
+### T tests
+
+One of the most common tests in statistics is the t-test, used to determine whether the means of two groups are equal to each other. The assumption for the test is that both groups are sampled from normal distributions with equal variances.
+
+```{r}
+d1 <- rnorm(100,0,1)
+d2 <- rnorm(100,0,1)
+d3 <- rnorm(100,100,9)
+```
+
+```{r}
+t.test(d1,d2)
+```
+
+```{r}
+t.test(d1,d3)
+```
+
+### Anova with penguins
+
+```{r}
+install.packages("palmerpenguins")
+library(palmerpenguins)
+library(tidyverse)
+
+```
+Assumtions: (1) independence, (2) normality, (3) equal valiance
+If normality is assumed, test the homogeneity of the variances:
+        If variances are equal, use ANOVA.
+        If variances are not equal, use the Welch ANOVA.
+If normality is not assumed, use the Kruskal-Wallis test.
+
+```{r}
+dat <- penguins %>%
+  select(species, flipper_length_mm)
+summary(dat)
+```
+Plot the data
+
+```{r}
+library(ggplot2)
+
+ggplot(dat) +
+  aes(x = species, y = flipper_length_mm, color = species) +
+  geom_jitter() +
+  theme(legend.position = "none")
+```
+“Are flippers length different for the 3 species of penguins?”.
+
+null: The 3 species are equal in terms of flipper length
+Hyp: at least one mean is different (⇒ at least one species is different from the other 2 species in terms of flipper length)
+
+Before checking the normality assumptions, compute the ANOVA
+
+```{r}
+res_aov <- aov(flipper_length_mm ~ species, data = dat)
+```
+
+test normality of the residuals with the Shapiro-Wilk test
+
+```{r}
+shapiro.test(res_aov$residuals)
+
+```
+
+We do not reject the hypothesis that the residuals have a normal dist.
+
+test for equality of the variances with a Levene’s or Bartlett’s test.
+
+```{r}
+#install.packages("car")
+#library(car)
+leveneTest(flipper_length_mm ~ species, data = dat)
+
+```
+
+
