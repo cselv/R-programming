@@ -1,0 +1,486 @@
+---
+title: "Advanced R -- Programming Topics"
+output: html_notebook
+---
+ 
+Online book: https://adv-r.hadley.nz/
+
+## Functional and Object Oriented Programming
+
+FP and OOP are both techniques that can be used in modern programming languages to make working with certain problems easier.
+
+Older languages were "opinioned" in that they would be designed to implement only one specific programming style.
+
+Eg. Java only implemented OOP
+
+But older languages are introducing programming tools to do different kinds of coding. Sort of like giving a chef the option to fry or bake something, whichever approach works best.
+
+Java now implements FP
+Go, Rust et all implement OOP and FP
+Scala is a FP language but has OOP concepts
+
+R supports both FP and OOP
+
+### Functional Programming
+
+The main focus of FP are the functions or transformations that are done on data -- exactly like in math where functions  transform data like
+
+f(x) = 4x + 4
+
+FP languages support "functions as first class objects" which means that function definition ARE data, just like any other data with the added feature that they can be executed.
+
+### Object Oriented Programming
+
+The main focus is on defining code that maps to objects in the real world where the object in the code bundles both data about the object and operations that can be executed by the object.
+
+---
+
+## Understanding name binding
+
+R uses indirection to associate names with data
+
+```{r}
+
+install.packages('lobstr')
+library(lobstr)
+ x <- 43
+ y <- c(1,2,3)
+ f <- function(x)  return (x * 2)
+```
+ 
+The keyword 'function' tells R that the data bound to f is executable R code.
+
+Binding
+
+Data is put into a storage location and then the variable name is "bound to" or points to that location.
+
+```{r}
+f
+
+obj_addr(x)
+obj_addr(y)
+obj_addr(f)
+
+```
+
+Assignment does not copy data, it just binds a new name to data location.  Adding () after the name means to execute the code that the name "f" is bound to 
+
+
+```{r}
+
+x1  <- x
+obj_addr(x1)
+f1 <- f  
+obj_addr(f1)
+
+```
+
+To avoid unseen errors when a change is made to a name bound to a shared location, a new copy is made for the name used in the change operation
+
+This is called "copy-on-modify" and supports the functional programming concept that operations data should not change the original data but only produce copies. ("Asking a question should not change the answer") This is called data immutability in the sense that running the same operation on the same data should always produce the same results
+
+
+eg. y = x + 1 does not change x but produces an new value assigned to y
+
+
+
+```{r}
+
+x <- c(9, 9, 10)
+y <- x
+obj_addr(x)
+obj_addr(y)
+ y[1]=-2
+ 
+```
+
+R keeps a count of whether an object has 0, 1 or many names bound to it.  If there is only one reference, modifications are done 'in place" to avoid copying massive amounts of data. If an object has a reference count of 1, then it can be modified in place for performance optimization
+
+```{r}
+
+a <- c(1,2,3,4)
+obj_addr(a)
+a[1] <- 78
+obj_addr(y)
+
+
+```
+
+When there are 0 references to an object, in other words, you can't possibly access it, then the memory location is deleted and returned to the pool of available memory.
+
+When passing data to functions, copies are NOT made, this is called a "call by name", but if the function changes the data, a copy is returned
+
+```{r}
+
+x <- 1:4
+obj_addr(x)
+
+f <- function (z) {
+        print(obj_addr(z))
+        return (z + 1)
+        
+}
+ x1 <- f(x)
+ 
+g <-  function (z) {
+        print(obj_addr(z))
+        z[1] <- 100
+        print(z)
+        return (z)
+}
+
+
+
+```
+## Shallow and Deep copies
+
+Lists are implemented as a list of pointers to data locations.  When we do an assignment and modify, there is a shallow copy, the pointers are copied but not the things they point to.
+
+## When things get copied
+
+Depending on a number of factors, including internal optimization methods, it is impossible to predict with absolute certainty if a copy will be made.  Why should we care then? Sometimes a lot of copying is going on we are not aware of and for large amounts of data, this can be a major performance hit. s
+
+```{r}
+
+x <- data.frame(matrix(runif(5 * 1e4), ncol = 5))
+medians <- vapply(x, median, numeric(1))
+
+for (i in seq_along(medians)) {
+  x[[i]] <- x[[i]] - medians[[i]]
+}
+cat(tracemem(x), "\n")
+
+for (i in 1:5) {
+  x[[i]] <- x[[i]] - medians[[i]]
+}
+
+```
+ 
+ However, using a list uses optimized c code and is considerably more efficient
+ 
+```{r}
+
+y <- as.list(x)
+cat(tracemem(y), "\n")
+for (i in 1:5) {
+  y[[i]] <- y[[i]] - medians[[i]]
+}
+
+untracemem(y)
+```
+ 
+## Functions and Environments
+
+Functions run in environments. Functions consist of a body and formal parameters that are stated in the function definition.
+However, if the function refers to values in the environment, this information is stored in the function environment
+
+Some base functions, like sum, are optimized c code and do not have these parts.
+
+R functions are called "closures" because the enclose their environment (more about this later)
+
+```{r}
+
+formals(f)
+body(f)
+environment(f)
+
+typeof(f)
+typeof(sum)
+body(sum)
+
+```
+
+## Function Composition
+
+This involves chaining functions together so that the output of one function is the input to another.
+This is a VERY FP way of working with functions. We can also use the magrittr syntax to chain in a more natural way
+
+```{r}
+
+square <- function(x) x^2
+deviation <- function(x) x - mean(x)
+
+sqrt(mean(square(deviation( runif(100)))))
+
+library(magrittr)
+
+runif(1e3) %>% deviation() %>% square() %>%  mean() %>%  sqrt()
+```
+       
+## Scoping
+
+This helps figure out what the "lifetime" of a variable and function is.
+
+```{r}
+
+a <- "global"
+
+g <- function() print("Top Level G")
+
+f <- function() {
+        print("I am the global f")
+        a <- "local"
+        print(a)
+      
+}
+
+print(a)
+
+f1 <- function() {
+      g <- function() print("I the g() function inside f1")
+      g()
+      print(environment(g))
+}
+
+
+```
+
+
+
+
+## Functionals
+
+In functional programming, functions can be passed as parameters.
+
+A functional is a function that takes a function as an argument and then returns some vector which has been modified from its original form by application of the function.        
+
+Remember that functions on a vector can return either a single statistic or another vector
+
+runif(n) returns a vector of size n uniform random distribution
+
+randomize is a functional
+
+```{r}
+
+randomise <- function(f) f(runif(1e3))
+randomise(mean)
+randomise(sum)
+
+library(magrittr)
+```
+
+## Maps
+
+A map takes a vector and a function, calls the function once for each element of the vector, and returns the results in a list. 
+
+Purrr is the functional programming toolkit from tidyverse
+
+```{r}
+library(purrr)
+double <- function(x) { x * 2}
+map(1:3, double)
+```
+The standard R function is lapply to do the same thing, however the map function is written in C for better performance.
+
+```{r}
+lapply(1:3, double)
+```
+
+## Maps and Anonymous functions
+
+Anonymous functions are not bound to a name. 
+
+They can be thought of as disposable functions in that we use them then forget about them -- they don't take up memory when we have no further use for them. It's often easier to write an anon function right where we use it rather than defining a function so we can refer to it by name.
+
+Long or complex function definitions should not be anonymous because it becomes hard to maintain and debug
+
+
+```{r}
+
+map(1:3, function(x) x + 10)
+map(1:3, ~ .x + 10)
+ 
+```
+
+## Different types of maps
+
+map() returns a list, but we may want to use simpler data structures.
+there are a number of variants of map, like map2, that vectorize their arguments differently
+
+For example, if we have a list of vectors then we can use map to get a list of the means
+
+```{r}
+xs <- map(1:8, ~ runif(10))
+ws <- map(1:8, ~ rpois(10, 5) + 1)
+
+map(xs,mean)
+map(xs, weighted.mean, w = ws)
+map2(xs, ws, weighted.mean)
+
+```
+
+## Reducers
+
+Recall that some functions map vectors to vectors in the sense that they transform each component of the vector into a corresponding new component.  As we have seen, the FP way to do with is with a map of some kind .
+
+The other type of function takes a data structure and returns some computation, like mean().  These are called reducers since the tend to reduce a set of data to a statistic or set of statistics
+
+reduce() takes a vector of length n and produces a vector of length 1 by calling a function with a pair of values at a time: reduce(1:4, f) is equivalent to f(f(f(1, 2), 3), 4).  f is a binary function (takes two arguments) but "rolls up" the result as it goes
+
+```{r}
+ mysum <- function(x,y) x + y
+ mysum(100,200)
+ x <- 1:100
+ sum(x)
+ reduce(x,mysum)
+ 
+```
+
+reduce returns the final result, but accumulate() returns all the intermediate results.
+
+```{r}
+accumulate(x,mysum)
+
+```
+## map reduce
+
+This is a common technique in AI, ML, big Data, etc.
+
+A large dataset is divided up into parts
+A map function is used to transform all the parts independently
+A reducer then combines the individual chunk results into a final answer
+
+```{r}
+
+is_42 <- function(x) return (x == 42)
+x <- 1:43
+y <- 1:41
+
+myor <- function (x, y) return (x || y)
+
+reduce(map(x,is_42),myor)
+reduce(map(y,is_42),myor)
+
+accumulate(map(x,is_42),myor)
+accumulate(map(y,is_42),myor)
+
+```
+
+
+## Function Factories
+
+A function factory is a function that takes some set of parameters and returns a new function
+This is often referred to as "meta-programming" or writing code that in turn writes more code
+
+This is often used when we don't know exactly what sort of function we will need until we need it -- i.e. it depends on the data
+Or we can use this to create a family of paramaterized functions -- a bunch of functions that are similar but differ in some way.
+
+for example map, map_dbl and related functiona form a family of functions.
+
+```{r}
+
+powerFactory <- function(exp) {
+  function(x) {
+    x ^ exp
+  }
+}
+
+square <- powerFactory(2)
+cube <- powerFactory(3)
+
+square(3)
+cube(3)
+```
+
+Or we can use this to create an arbitrary set of functions based on a parameter
+
+```{r}
+powers <- list(2,4,8)
+
+funcs <- map(powers,powerFactory)
+
+funcs[[3]](2)
+
+```
+Going back to the square and the cube functions, they have different environments
+
+```{r}
+environment(powerFactory)
+environment(square)
+environment(cube)
+
+```
+Looking at the code for square and cube, we see the variable "exp" but it is not defined anywhere in the function because it was a variable in the factory function.
+
+A variable that occurs in a function that is not passed via a parameter is called a free variable (free in the sense that is free of any parameter list binding) But for the function to work, it needs that value
+
+When square was defined, the result was not a function but a "closure"
+
+```{r}
+typeof(square)
+```
+A closure is a function PLUS all the free variables it references in the environment and the values they had when the function was created. Notice that the code for square and cube are identical, the only difference is the value of exp in their respective closures
+```{r}
+rlang::env_print(square)
+rlang::env_print(cube)
+
+rlang::fn_env(square)$exp
+rlang::fn_env(cube)$exp
+```
+Stateful function
+
+```{r}
+total <- 0
+
+addTo <- function(x) total <- total + x
+
+```
+
+The <<- operator access a binding in the enclosing environment
+
+```{r}
+total <- 0
+
+addTo <- function(x) total <<- total + x
+
+map(1:100,addTo)
+```
+
+## Lazy evaluation
+
+
+As in most FP languages, variables are evaluated when they are used, not when they are passed or defined (remember from the first part)
+
+```{r}
+x <- 2
+sq2 <- powerFactory(x)
+x <- 3
+```
+
+We need to force the evaluation of variable to prevent this sort of lazy loading
+
+```{r}
+powerFactory <- function(exp) {
+  force(exp)
+  function(x) {
+    x ^ exp
+  }
+}
+
+```
+
+## Function Operators
+
+Function operators take functions as input and return a new function
+
+Function operators are often used for creating function wrappers, or functions that wrap an existing function in a layer of added functionality.
+
+```{r}
+
+chatty <- function(f) {
+  force(f)
+  
+  function(x, ...) {
+    res <- f(x, ...)
+    cat("Processing ", x, "\n", sep = "")
+    res
+  }
+}
+
+f <- function(x) x ^ 2
+s <- c(3, 2, 1)
+
+map(s, chatty(f))
+
+
+```

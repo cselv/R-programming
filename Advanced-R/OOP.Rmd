@@ -1,0 +1,204 @@
+---
+title: "Object Oriented Programming"
+output: html_notebook
+---
+
+# OOP 
+
+OOP is designed to emulate objects in the real world and their interactions
+
+An object has some conceptual reality and is of some type. For example, "Person" is a type.
+
+Objects are instances of "types".  Rod is an object which is an instance of "Person"
+
+Objects can be instances of several types: For example I am a person, a parent and a Canadian
+
+All objects of a given type are assumed to have the same properties and attributes.
+
+Types define interfaces (how we interact with the object) and how it interacts with objects of other types
+  - For example, how an object of type "teacher" interacts with an object of type "student"
+  
+In OOP types define:
+  1. Attribute:, the data associated with an object. For a person object this might be:
+    - height, weight, date of birth, etc
+  2. Behaviours - actions object perform when receiving a message.
+    - Polymorphism says that what an object does when it receives a message depends on its type
+    - for example "Fire!" will be handled differently by a firefighter object than a soldier object.
+  3. Identity - some way of uniquely identifying an object from all other objects of that type
+  
+OOP is iconic
+
+  1. We think in terms of types and object when dealing with the world around us
+  2. OOP says programs should look like what they automate.
+    Users of the program should see the same objects when they interact with an application that they understand from their ral world experience.
+  
+For data analysis, looking at the world in terms of objects can be most useful since we are capturing data about objects in the real world.
+  1. For example a survey of voting preferences would naturally use "person" as an object
+    -leads to natural analysis like "How likely is it that a person who is male and lives in the suburbs would vote for Doug Ford?"
+    
+## OOP in R
+
+R was not intended as an OOP language but has incorporated OOP capabilities
+
+- S3 and S4 are OOP capabilities that are not part of base R
+- R6 is an OO package that 
+- R had a base object system before it adopted OO so it can be a bit confusing.
+- the main difference is that base R objects do not have a type associated with them
+  - base objects return FALSE when queried if they are objects
+- Every object has a base type even if it is an OO object
+  - These are not "object oriented" types but work at the underlying C code leve
+  - The terminology is confusing because of the historically different uses of the terms type and class
+  
+
+```{r}
+
+ls <- list()
+is.object(ls)
+attr(ls,"class")
+typeof(ls)
+
+
+df <- data.frame()
+is.object(df)
+attr(df,"class")
+
+install.packages('sloop')
+sloop::otype(ls)
+sloop::otype(df)
+typeof(df)
+
+```
+
+## S3
+
+An S3 object is an instance of some class ad has optional attributes
+
+For example, a student type is defined to have attributes of name, age and GPA  
+
+```{r}
+s <- list(Name = "John", Age = 21, GPA = 3.5, StudentID=99879)
+class(s) <- "Student"
+
+is.object(s)
+sloop::otype(s)
+attr(s,"class")
+
+```
+
+Best practices is to provide three functions:
+  1. A constructor to ensure that an object is structurally correct (Ensure consistent nameing of fields for example)
+  2. A Validator to ensure that the object is a correct state (the age is non-zero for example)
+  3. A factory function that can be called to create new objects (often will call the constructor and validator)
+    - Also may ensure that only one object - for example, if a new student is requested to be created with a given student number, but the number is un use, the factory might return a reference to the existing student object (remember identity)
+    
+```{r}
+
+newStudent <- function(num,nam,age,gpa) {
+  
+  structure(list(Name = nam, Age = age, GPA = gpa, StudentID=num), class="Student")
+}
+  b <- newStudent(34478,"Bill",21, 3.5)
+  attr(b,"class")
+
+studentValidator <- function(age,gpa) {
+  if (!is.numeric(gpa) || gpa <=0 || gpa > 4) return(FALSE)
+  if (!is.numeric(age) || age <=0) return(FALSE)
+  return(TRUE)
+}
+
+
+newStudent2 <- function(num,nam,age,gpa) {
+  
+  if(!studentValidator(age,gpa)) {
+    stop("Invalid dats supplied for student object", call. = TRUE)
+  }
+  
+  structure(list(Name = nam, Age = age, GPA = gpa, StudentID=num), class="student")
+}
+```
+
+Factory methods are used to call the constructor and validator and do other work.
+For example, enforce the singleton pattern
+
+let us suppose that there can be only one student object (for whatever reason)
+
+```{r}
+
+Singleton <- NULL
+
+Student <-  function(num,nam,age,gpa) {
+  if (is.null(Singleton)) Singleton <<- newStudent2(num,nam,age,gpa)
+  return (Singleton)
+}
+
+Student(34478,"Bill",21, 3.5)
+```
+
+## Writing Methods
+
+A method like print is implemented differently for different kinds of objects. 
+When using print with an object the correct version is "dispatched" or executed depending on the class
+
+For example, to write a print method for a student
+
+```{r}
+print.Student <- function(obj) {
+cat(obj$Name, " ID: ", obj$StudentID,"\n")
+cat(obj$Age, "years old\n")
+cat("GPA:", obj$GPA, "\n")
+}
+```
+  
+
+# s4
+
+S4 is a more formal OO programming style
+
+You define an S4 class by calling setClass() with the class name and a definition of its slots, and the names and classes of the class data:
+
+```{r}
+
+library(methods)
+
+setClass("Person", 
+  slots = c(
+    name = "character", 
+    age = "numeric"
+  )
+)
+
+john <- new("Person", name = "John Smith", age = NA_real_)
+is(john)
+john@name
+slot(john, "age")
+
+sloop::otype(john)
+
+```
+
+Getter and Setter functions. We need a base template to work from
+
+
+```{r}
+setGeneric("age", function(x) standardGeneric("age"))
+setGeneric("age<-", function(x, value) standardGeneric("age<-"))
+
+
+```
+
+The getters and setters ensure that the data is accessed only through the interface of the object
+
+```{r}
+setMethod("age", "Person", function(x) x@age)
+setMethod("age<-", "Person", function(x, value) {
+  x@age <- value
+  x
+})
+
+age(john) <- 50
+age(john)
+
+sloop::ftype(age)
+```
+
+ 
