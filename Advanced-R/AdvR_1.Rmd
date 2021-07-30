@@ -9,14 +9,14 @@ Online book: https://adv-r.hadley.nz/
 
 FP and OOP are both techniques that can be used in modern programming languages to make working with certain problems easier.
 
-Older languages were "opinioned" in that they would be designed to implement only one specific programming style.
+Older languages were "opinionated" in that they would be designed to implement only one specific programming style.
 
 Eg. Java only implemented OOP
 
 But older languages are introducing programming tools to do different kinds of coding. Sort of like giving a chef the option to fry or bake something, whichever approach works best.
 
 Java now implements FP
-Go, Rust et all implement OOP and FP
+Go, Rust et al implement OOP and FP
 Scala is a FP language but has OOP concepts
 
 R supports both FP and OOP
@@ -125,7 +125,7 @@ f <- function (z) {
 g <-  function (z) {
         print(obj_addr(z))
         z[1] <- 100
-        print(z)
+        print()
         return (z)
 }
 
@@ -218,6 +218,7 @@ a <- "global"
 g <- function() print("Top Level G")
 
 f <- function() {
+        print(a)
         print("I am the global f")
         a <- "local"
         print(a)
@@ -342,7 +343,7 @@ A reducer then combines the individual chunk results into a final answer
 
 ```{r}
 
-is_42 <- function(x) return (x == 42)
+is_42 <- function(x) return (x == 48)
 x <- 1:43
 y <- 1:41
 
@@ -365,7 +366,7 @@ This is often referred to as "meta-programming" or writing code that in turn wri
 This is often used when we don't know exactly what sort of function we will need until we need it -- i.e. it depends on the data
 Or we can use this to create a family of paramaterized functions -- a bunch of functions that are similar but differ in some way.
 
-for example map, map_dbl and related functiona form a family of functions.
+for example map, map_dbl and related functions form a family of functions.
 
 ```{r}
 
@@ -484,3 +485,12 @@ map(s, chatty(f))
 
 
 ```
+
+```{r}
+ex1 <- as.vector(1:3, mode = "integer")
+
+fex1 <- function(x) x + 1
+res1 <- map_dbl(ex1,fex1)
+
+```
+

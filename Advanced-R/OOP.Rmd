@@ -139,7 +139,7 @@ Student(34478,"Bill",21, 3.5)
 A method like print is implemented differently for different kinds of objects. 
 When using print with an object the correct version is "dispatched" or executed depending on the class
 
-For example, to write a print method for a student
+For example, to write a print method for a student. The print() function is polymorphic in that it has different bodies which are executed depending on the type of thing it is printing. We can add to the list of specializations like adding a print method for a Student object
 
 ```{r}
 print.Student <- function(obj) {
@@ -148,7 +148,41 @@ cat(obj$Age, "years old\n")
 cat("GPA:", obj$GPA, "\n")
 }
 ```
-  
+
+One of the advantages to OOP is that we can let the object containing the data decide how to process a function.
+This means we can have a collection of objects, each of which has a different implementatation of a method
+
+Then if we map the generic function, 
+
+```{r}
+d <- list(Name = "Dog")
+class(d) <- "Dog"
+b <- list(Name = "ird")
+class(b) <- "Bird"
+
+print.Dog <- function(obj) cat("Arf \n")
+print.Bird <- function(obj) cat("Tweet \n")
+
+zoo <- list(d,b)
+
+out <-map(zoo,print)
+```
+
+Or we can create our own generic
+
+```{r}
+speak <- function(obj) {
+  UseMethod("speak")
+}
+
+speak.default <- function(obj) ".... crickets ...."
+speak.Bird <- function(obj) "Melodic Song"
+speak.Dog <- function(obj) "Arf arf"
+
+
+s <-  map(zoo,speak)
+```
+-------------
 
 # s4
 
@@ -198,7 +232,155 @@ setMethod("age<-", "Person", function(x, value) {
 age(john) <- 50
 age(john)
 
+sloop::otype(john)
 sloop::ftype(age)
 ```
 
- 
+
+Using Prototypes
+
+Prototypes can be used in define default structure
+
+```{r}
+
+setClass("Car",
+    slots = c(
+        cylinders = "numeric",
+        maker = "character"
+     ),
+     prototype = list(
+         cylinders = NA_integer_,
+           maker = NA_character_
+      )
+)
+
+Fiesta <- new("Car", cylinders = 4, maker = "Ford")
+
+str(Fiesta)
+```
+
+Inheritance allows us to build specializations
+
+```{r}
+setClass("Sedan",
+  contains = "Car",
+  slots = c( doors = "numeric",
+             owner = "Person"),
+  prototype = list (
+    doors = 4,
+    owner = new("Person")
+  ))
+
+Acura <- new("Sedan")
+str(Acura)
+is(Acura, "Car")
+```
+
+Constructors and Validators
+
+new is used as a constructor, so we want to wrap it in a factory method which, by convention is the same as the class name
+
+```{r}
+Person <- function(name, age = NA) {
+  age <- as.double(age)
+  
+  new("Person", name = name, age = age)
+}
+
+Person("Plato")
+```
+
+Validators do the same as in S3
+
+```{r}
+Person(45)  # This is an error
+
+setValidity("Person", function(object) {
+  if (!is.na(object@age) && object@age <= 0) {
+    "@age must be greater than zero"
+  } else {
+    TRUE
+  }
+})
+
+Person("Zemo", -1)
+```
+# R6
+
+More traditional OO Language approach but can produce code that is not "R-like"
+Easier for OO programmers to pick up
+Uses a different underlying mechanism than S3 and S4 (which are actually build on FP constructs)
+Uses encapsulated functions instead
+
+Main feature is the constructor method which has the same name of the class
+
+```{r}
+library(R6)
+
+Accumulator <- R6Class("Accumulator", list(
+  sum = 0,
+  add = function(x = 1) {
+    self$sum <- self$sum + x 
+    invisible(self)
+  })
+)
+
+A1 <- Accumulator$new()
+A1$add()
+A1$sum
+A1$add(10)
+A1$sum
+
+```
+
+
+Method Chaining
+
+```{r}
+A1 <-Accumulator$new()
+A1$add(10)$add(10)$sum
+```
+Initialize and Print
+
+Initialize extends the constructor
+
+```{r}
+Dude <- R6Class("Dude", list(
+  name = NULL,
+  age = NA,
+  initialize = function(name, age = NA) {
+    stopifnot(is.character(name), length(name) == 1)
+    stopifnot(is.numeric(age), length(age) == 1)
+    
+    self$name <- name
+    self$age <- age
+  }
+))
+
+Chuck <- Dude$new("Chuck", age = "thirty-eight")
+Chuck <- Dude$new("Chuck", age = 38)
+```
+If you have more expensive validation requirements, implement them in a separate $validate() and only call when needed.
+
+Print customizes printing
+
+```{r}
+Dude <- R6Class("Dude", list(
+  name = NULL,
+  age = NA,
+  initialize = function(name, age = NA) {
+    self$name <- name
+    self$age <- age
+  },
+  print = function(...) {
+    cat("Dude: \n")
+    cat("  Name: ", self$name, "\n", sep = "")
+    cat("  Age:  ", self$age, "\n", sep = "")
+    invisible(self)
+  }
+))
+
+Mikey <- Dude$new("Mikey")
+
+```
+
