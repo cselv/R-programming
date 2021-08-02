@@ -49,6 +49,8 @@ R was not intended as an OOP language but has incorporated OOP capabilities
   - These are not "object oriented" types but work at the underlying C code leve
   - The terminology is confusing because of the historically different uses of the terms type and class
   
+  S3, S4, R6
+  
 
 ```{r}
 
@@ -71,11 +73,12 @@ typeof(df)
 
 ## S3
 
-An S3 object is an instance of some class ad has optional attributes
+An S3 object is an instance of some class and has optional attributes
 
 For example, a student type is defined to have attributes of name, age and GPA  
 
 ```{r}
+
 s <- list(Name = "John", Age = 21, GPA = 3.5, StudentID=99879)
 class(s) <- "Student"
 
@@ -86,7 +89,7 @@ attr(s,"class")
 ```
 
 Best practices is to provide three functions:
-  1. A constructor to ensure that an object is structurally correct (Ensure consistent nameing of fields for example)
+  1. A constructor to ensure that an object is structurally correct (Ensure consistent naming of fields for example)
   2. A Validator to ensure that the object is a correct state (the age is non-zero for example)
   3. A factory function that can be called to create new objects (often will call the constructor and validator)
     - Also may ensure that only one object - for example, if a new student is requested to be created with a given student number, but the number is un use, the factory might return a reference to the existing student object (remember identity)
@@ -110,7 +113,7 @@ studentValidator <- function(age,gpa) {
 newStudent2 <- function(num,nam,age,gpa) {
   
   if(!studentValidator(age,gpa)) {
-    stop("Invalid dats supplied for student object", call. = TRUE)
+    stop("Invalid data supplied for student object", call. = TRUE)
   }
   
   structure(list(Name = nam, Age = age, GPA = gpa, StudentID=num), class="student")
@@ -150,22 +153,22 @@ cat("GPA:", obj$GPA, "\n")
 ```
 
 One of the advantages to OOP is that we can let the object containing the data decide how to process a function.
-This means we can have a collection of objects, each of which has a different implementatation of a method
+This means we can have a collection of objects, each of which has a different implementation of a method
 
 Then if we map the generic function, 
 
 ```{r}
 d <- list(Name = "Dog")
 class(d) <- "Dog"
-b <- list(Name = "ird")
+b <- list(Name = "Bird")
 class(b) <- "Bird"
 
 print.Dog <- function(obj) cat("Arf \n")
 print.Bird <- function(obj) cat("Tweet \n")
 
-zoo <- list(d,b)
+zoo <- list(d,b,bill)
 
-out <-map(zoo,print)
+sooout <-map(zoo,print)
 ```
 
 Or we can create our own generic
@@ -204,7 +207,7 @@ setClass("Person",
 john <- new("Person", name = "John Smith", age = NA_real_)
 is(john)
 john@name
-slot(john, "age")
+slot(john, "name")
 
 sloop::otype(john)
 
@@ -305,6 +308,18 @@ setValidity("Person", function(object) {
 
 Person("Zemo", -1)
 ```
+
+1. Override - replace base class method with derived class method
+2. Extension - execute base class method but also do addition subclass stuff
+
+Things can get really complicated really fast.
+
+1. Design - think through the design
+2. Don't write classes "just because" - a class should solve a problem
+3. Refactor regularly
+
+
+
 # R6
 
 More traditional OO Language approach but can produce code that is not "R-like"
@@ -337,8 +352,8 @@ A1$sum
 Method Chaining
 
 ```{r}
-A1 <-Accumulator$new()
-A1$add(10)$add(10)$sum
+A <-Accumulator$new()
+A$add(10)$add(10)$sum
 ```
 Initialize and Print
 

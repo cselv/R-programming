@@ -481,7 +481,7 @@ chatty <- function(f) {
 f <- function(x) x ^ 2
 s <- c(3, 2, 1)
 
-map(s, chatty(f))
+
 
 
 ```
@@ -493,4 +493,7 @@ fex1 <- function(x) x + 1
 res1 <- map_dbl(ex1,fex1)
 
 ```
+
+widening versus narrowing conversions
+
 
