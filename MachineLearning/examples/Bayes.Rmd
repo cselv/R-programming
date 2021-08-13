@@ -1,0 +1,48 @@
+---
+title: "Naive Bayes"
+output: html_notebook
+---
+
+Example is from:
+https://www.geeksforgeeks.org/naive-bayes-classifier-in-r-programming/
+
+Using the IRIS dataset and libraries
+
+```{r}
+
+data(iris)
+str(iris)
+install.packages("e1071")
+library(e1071)
+library(caTools)
+library(caret)
+
+```
+
+Splitting data into train and test data 
+```{r}
+
+split <- sample.split(iris, SplitRatio = 0.7)
+train_cl <- subset(iris, split == "TRUE")
+test_cl <- subset(iris, split == "FALSE")
+```
+
+Training the model
+
+```{r}
+set.seed(120)
+classifier_cl <- naiveBayes(Species ~ ., data = train_cl)
+classifier_cl
+```
+
+Run the test data and run confusiong matrix to see reslt
+
+```{r}
+
+y_pred <- predict(classifier_cl, newdata = test_cl)
+cm <- table(test_cl$Species, y_pred)
+cm
+confusionMatrix(cm)
+
+```
+

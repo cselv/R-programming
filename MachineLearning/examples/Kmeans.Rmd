@@ -1,0 +1,43 @@
+---
+title: "K means example"
+output: html_notebook
+ ---
+
+This example is from:
+https://www.statology.org/k-means-clustering-in-r/
+
+Load Libraries and data set
+
+```{r}
+install.packages('factoextra')
+library(factoextra)
+library(cluster)
+df <- USArrests
+```
+
+remove rows with missing values
+scale each variable to have a mean of 0 and sd of 1
+```{r}
+df <- na.omit(df)
+df <- scale(df)
+```
+
+Find the Optimal Number of Clusters
+
+First, we’ll use the fviz_nbclust() function to create a plot of the number of clusters vs. the total within sum of squares:
+
+```{r}
+fviz_nbclust(df, kmeans, method = "wss")
+
+```
+
+Perform K-Means Clustering with Optimal K=4 and 25 different configurations
+
+```{r}
+set.seed(1)
+km <- kmeans(df, centers = 4, nstart = 25)
+km
+fviz_cluster(km, data = df)
+```
+
+

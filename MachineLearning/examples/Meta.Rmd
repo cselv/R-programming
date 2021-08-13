@@ -1,0 +1,66 @@
+---
+title: "MetaProgramming"
+output: html_notebook
+---
+
+## Capturing and expressions
+
+```{r}
+library(rlang)
+library(lobstr)
+
+expr(mean(x, na.rm = TRUE))
+f <- expr(mean(x, na.rm = TRUE))
+
+capture_it <- function(x) {
+  expr(x)
+}
+capture_it(a + b + c)
+
+capture_it <- function(x) {
+  enexpr(x)
+}
+```
+
+## Modifying and expressions
+
+```{r}
+f <- expr(f(x = 1, y = 2))
+f$z <- 3
+f[[2]] <- NULL
+
+```
+
+## Profiling
+
+```{r}
+
+install.packages('profvis')
+install.packages('bench')
+library(profvis)
+library(bench)
+f <- function() {
+  pause(0.1)
+  g()
+  h()
+}
+g <- function() {
+  pause(0.1)
+  h()
+}
+h <- function() {
+  pause(0.1)
+}
+
+tmpex <- tempfile()
+
+Rprof(tmpex, interval = 0.1)
+
+f()
+Rprof(NULL)
+
+writeLines(readLines(tmpex))
+
+```
+
+
